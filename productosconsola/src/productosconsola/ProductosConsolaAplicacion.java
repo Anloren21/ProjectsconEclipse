@@ -3,55 +3,46 @@ package productosconsola;
 //import java.util.Scanner;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
+
+import accesodatos.ProductoCrud;
+import dtos.Producto;
+
+//import accesodatos.ProductoCrud;
 
 import static bibliotecas.Consola.*;
+//import static accesodatos.ProductoCrud.*;
 
 public class ProductosConsolaAplicacion {
 	//	Refactorizaciones
 	private static final int OPCION_SALIR = 0;
 
-	private static final String JDBC_URL = "jdbc:sqlite:productosconsola.db";
-
 	private static final String FORMATO_CABECERAS = "%2s %-20s %12s\n";
 	private static final String FORMATO_REGISTRO = "%6s: %s\n";
 	private static final String FORMATO_LINEA = "%2d %-20s %10.2f €\n";
-
-	private static final String SQL_SELECT = "SELECT * FROM productos";
-	private static final String SQL_SELECT_ID = "SELECT * FROM productos WHERE id=?";
-
-	private static final String SQL_INSERT = "INSERT INTO productos (nombre, precio) VALUES (?, ?)";
-	private static final String SQL_UPDATE_ID = "UPDATE productos SET nombre=?, precio=? WHERE id=?";
-	private static final String SQL_DELETE_ID = "DELETE FROM productos WHERE id=?";
-
-	
-	private static Connection con = null;
 	
 //	Programa principal
 	public static void main(String[] args) {
-		try  {
-			con = DriverManager.getConnection(JDBC_URL);
-			
+		try  {			
 			int opcion;
 
 			do {
 				mostrarMenu();
 				opcion = pedirOpcion();
-				procesarOpcion(opcion);
-				
+				System.out.println();
+				try {
+					procesarOpcion(opcion);					
+				}catch (Exception e) {
+					System.out.println("Error en la operación de base de datos");
+					System.out.println(e.getMessage());
+				}
+				System.out.println();
 			} while (opcion != OPCION_SALIR);
 
-		} catch (NumberFormatException | SQLException e) {
+		} catch (Exception e) {
 			System.out.println("Error no controlado en la app");
 			System.out.println(e.getMessage());
-		} finally {			
-			if (con != null) {
-				try {
-					con.close();
-				} catch (SQLException e) {
-					System.out.println("Ha habido un error al cerrar la conexion");
-				}
-			}
-		}
+		} 
 	}
 
 	private static void mostrarMenu() {
@@ -75,16 +66,14 @@ public class ProductosConsolaAplicacion {
 		return pedirInt("Selecciona una opcion: ");
 	}
 
-	private static void procesarOpcion(int opcion) {
+	private static void procesarOpcion(int opcion) throws SQLException {
 		switch (opcion) {
 
 		case 1:
 			listado();
-
 			break;
 		case 2:
 			buscarID();
-
 			break;
 		case 3:
 			insertar();
@@ -92,7 +81,6 @@ public class ProductosConsolaAplicacion {
 		case 4: 
 			modificar();
 			break;
-		
 		case 5:  
 			borrar();
 			break;
@@ -110,13 +98,11 @@ public class ProductosConsolaAplicacion {
 				LISTADO
 				
 				""");
-
-		// conexion de base de Datos
-		try (PreparedStatement pst = con.prepareStatement(SQL_SELECT); ResultSet rs = pst.executeQuery()) {
-			mostrarListado(rs);
-		} catch (SQLException e) {
-			System.out.println("Error al hacer el Listado");
-		}
+		
+		ArrayList<Producto> productos = ProductoCrud.obtenerTodos();
+		
+		mostrarListado(productos);
+		
 	}
 
 	private static void buscarID() {
@@ -129,24 +115,16 @@ public class ProductosConsolaAplicacion {
 		Long id = pedirLong("Dime el ID: ");
 		System.out.println();
 
-		// conexion de base de Datos
-		try (PreparedStatement pst = con.prepareStatement(SQL_SELECT_ID)) {
-			
-			pst.setLong(1, id);
-			
-			try (ResultSet rs = pst.executeQuery()) {
-				if (rs.next()) { 
-					mostrarRegistro(rs);
-				} else {
-					System.out.println("No se ha encontrado el id " + id);
-				}
-			} 
-		} catch (SQLException e) {
-			System.out.println("Error al buscar el producto");
+		Producto producto = ProductoCrud.obtenerPorId(id);
+		
+		if(producto != null) {
+			mostrarRegistro(producto);
+		} else {
+			System.out.println("No se ha encontrado el id " + id);
 		}
 	}
 
-	private static void insertar() {
+	public static void insertar() {
 		System.out.print("""
 				
 				NUEVO PRODUCTO
@@ -156,25 +134,14 @@ public class ProductosConsolaAplicacion {
 		String nombre = pedirString("Nombre");
 		BigDecimal precio = pedirBigDecimal("Precio");
 		
-		// conexion de base de Datos
-		try (PreparedStatement pst = con.prepareStatement(SQL_INSERT)) {
-			pst.setString(1, nombre);
-			pst.setBigDecimal(2, precio);
-			
-			//Ejecutar un cambio dentro de lo que ahi dentro de la base
-			int numeroRegistrosModificados = pst.executeUpdate();
-			
-			if (numeroRegistrosModificados == 1) {
-				System.out.println("Inserción correcta");
-			} else {
-				System.out.println("Se han modificado " + numeroRegistrosModificados);							
-			}
-		} catch (SQLException e) {
-			System.out.println("Error al hacer el añadir ");
-		}
+		Producto producto = new Producto(null, nombre, precio);
+		
+		ProductoCrud.insertar(producto);
+		
+		System.out.println("Inserción correcta");
 	}
 
-	private static void modificar() {
+	public static void modificar() {
 		System.out.print("""
 				
 				MODIFICAR PRODUCTO
@@ -185,26 +152,14 @@ public class ProductosConsolaAplicacion {
 		String nombre = pedirString("Nombre: ");
 		BigDecimal precio = pedirBigDecimal("Precio: ");
 		
-		// conexion de base de Datos
-		try (PreparedStatement pst = con.prepareStatement(SQL_UPDATE_ID)) {
-			pst.setString(1, nombre);
-			pst.setBigDecimal(2, precio);
-			pst.setLong(3, id);
-			
-			//Ejecutar un cambio dentro de lo que ahi dentro de la base
-			int numeroRegistrosModificados = pst.executeUpdate();
-			
-			if (numeroRegistrosModificados == 1) {
-				System.out.println("Modificación correcta");
-			} else {
-				System.out.println("Se han modificado " + numeroRegistrosModificados);							
-			}
-		} catch (SQLException e) {
-			System.out.println("Error al modificar el producto ");
-		}
+		Producto producto = new Producto(id, nombre, precio);
+		
+		ProductoCrud.modificar(producto);
+		
+		System.out.println("Modificación correcta.");
 	}
 
-	private static void borrar() {
+	public static void borrar() {
 		System.out.print("""
 				
 				ELIMINAR PRODUCTO
@@ -213,29 +168,16 @@ public class ProductosConsolaAplicacion {
 		
 		Long id = pedirLong("Id: ");
 		
-		// conexion de base de Datos
-		try (PreparedStatement pst = con.prepareStatement(SQL_DELETE_ID)) {
-
-			pst.setLong(1, id);
-			
-			//Ejecutar un cambio dentro de lo que ahi dentro de la base
-			int numeroRegistrosModificados = pst.executeUpdate();
-			
-			if (numeroRegistrosModificados == 1) {
-				System.out.println("Borrado correcta");
-			} else {
-				System.out.println("Se han modificado " + numeroRegistrosModificados);							
-			}
-		} catch (SQLException e) {
-			System.out.println("Error al eliminar el producto");
-		}
+		ProductoCrud.borrar(id);
+		
+		System.out.println("Borrado correcto.");
 	}
 
-	private static void mostrarListado(ResultSet rs) throws SQLException {
+	public static void mostrarListado(ArrayList<Producto> productos) {
 		mostrarCabeceras();
 		
-		while(rs.next()) { //De uno en uno mientras haya carga que procesar
-			mostrasLinea(rs);
+		for(Producto producto: productos) { //De uno en uno mientras haya carga que procesar
+			mostrasLinea(producto);
 		}
 	}
 
@@ -244,13 +186,13 @@ public class ProductosConsolaAplicacion {
 		System.out.printf(FORMATO_CABECERAS, "--", "--------","------");
 	}
 
-	private static void mostrasLinea(ResultSet rs) throws SQLException {
-		System.out.printf(FORMATO_LINEA, rs.getLong("id"), rs.getString("nombre"), rs.getBigDecimal("precio").setScale(2));
+	private static void mostrasLinea(Producto producto) {
+		System.out.printf(FORMATO_LINEA, producto.id(), producto.nombre(), producto.precio());
 	}
 
-	private static void mostrarRegistro(ResultSet rs) throws SQLException {
-		System.out.printf(FORMATO_REGISTRO, "Id", rs.getLong("id"));
-		System.out.printf(FORMATO_REGISTRO, "Nombre", rs.getString("nombre"));
-		System.out.printf(FORMATO_REGISTRO, "Precio", rs.getBigDecimal("precio"));
+	private static void mostrarRegistro(Producto producto) {
+		System.out.printf(FORMATO_REGISTRO, "Id", producto.id());
+		System.out.printf(FORMATO_REGISTRO, "Nombre", producto.nombre());
+		System.out.printf(FORMATO_REGISTRO, "Precio", producto.precio());
 	}
 }
