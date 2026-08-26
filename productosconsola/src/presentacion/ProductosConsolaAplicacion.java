@@ -1,4 +1,4 @@
-package productosconsola;
+package presentacion;
 
 //import java.util.Scanner;
 import java.math.BigDecimal;
