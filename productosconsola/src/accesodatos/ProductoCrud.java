@@ -11,6 +11,10 @@ import dtos.Producto;
 
 public class ProductoCrud {
 	private static final String JDBC_URL = "jdbc:sqlite:productosconsola.db";
+	//private static final String JDBC_URL = "jdbc:mysql://localhost:3306/productosconsola";
+	
+	private static final String JDBC_USER = "root";
+	private static final String JDBC_PASS = "";
 	
 	private static final String SQL_SELECT = "SELECT * FROM productos";
 	private static final String SQL_SELECT_ID = "SELECT * FROM productos WHERE id=?";
@@ -20,7 +24,7 @@ public class ProductoCrud {
 	private static final String SQL_DELETE_ID = "DELETE FROM productos WHERE id=?";
 	
 	public static ArrayList<Producto> obtenerTodos() {
-		try (Connection con = DriverManager.getConnection(JDBC_URL); PreparedStatement pst = con.prepareStatement(SQL_SELECT); ResultSet rs = pst.executeQuery()) {
+		try (Connection con = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS); PreparedStatement pst = con.prepareStatement(SQL_SELECT); ResultSet rs = pst.executeQuery()) {
 			ArrayList<Producto> productos = new ArrayList<Producto>();
 			
 			while(rs.next()) {
@@ -36,7 +40,7 @@ public class ProductoCrud {
 
 	public static Producto obtenerPorId(Long id) {
 		// conexion de base de Datos
-		try (Connection con = DriverManager.getConnection(JDBC_URL); PreparedStatement pst = con.prepareStatement(SQL_SELECT_ID)) {
+		try (Connection con = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS); PreparedStatement pst = con.prepareStatement(SQL_SELECT_ID)) {
 			
 			pst.setLong(1, id);
 			
@@ -56,7 +60,7 @@ public class ProductoCrud {
 
 	public static void insertar(Producto producto) {
 		// conexion de base de Datos
-		try (Connection con = DriverManager.getConnection(JDBC_URL); PreparedStatement pst = con.prepareStatement(SQL_INSERT)) {
+		try (Connection con = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS); PreparedStatement pst = con.prepareStatement(SQL_INSERT)) {
 			
 			pst.setString(1, producto.nombre());
 			pst.setBigDecimal(2, producto.precio());
@@ -74,7 +78,7 @@ public class ProductoCrud {
 	
 	public static void modificar(Producto producto) {
 		// conexion de base de Datos
-		try (Connection con = DriverManager.getConnection(JDBC_URL);  PreparedStatement pst = con.prepareStatement(SQL_UPDATE_ID)) {
+		try (Connection con = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS);  PreparedStatement pst = con.prepareStatement(SQL_UPDATE_ID)) {
 			pst.setString(1, producto.nombre());
 			pst.setBigDecimal(2, producto.precio());
 			pst.setLong(3, producto.id());
@@ -92,7 +96,7 @@ public class ProductoCrud {
 
 	public static void borrar(Long id) {
 		// conexion de base de Datos
-		try (Connection con = DriverManager.getConnection(JDBC_URL); PreparedStatement pst = con.prepareStatement(SQL_DELETE_ID)) {
+		try (Connection con = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASS); PreparedStatement pst = con.prepareStatement(SQL_DELETE_ID)) {
 
 			pst.setLong(1, id);
 			
