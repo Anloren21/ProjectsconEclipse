@@ -11,17 +11,23 @@ public class UsuariosCrud {
 	public static final String JDBC_USER = "amazonia_app";
 	public static final String JDBC_PASS = "admin";
 	
+	private static final String SQL_SELECT = """
+			SELECT u.id AS u_id, u.email AS u_email, u.password AS u_password, u.nombre AS u_nombre, r.nombre AS r_nombre
+			FROM usuarios u
+			JOIN roles r ON u.roles_id = r.id;	
+			""";
+	
 	
 	public static ArrayList<Usuario> obtenerTodos() {
 		try {
-			PreparedStatement pst = crearSentencia("SELECT * FROM usuarios");
+			PreparedStatement pst = crearSentencia(SQL_SELECT);
 			ResultSet rs = pst.executeQuery();
 			
 			ArrayList<Usuario> usuarios = new ArrayList<>();
 			
 			while (rs.next()) {
-				Usuario usuario = new Usuario(rs.getLong("id"), rs.getString("nombre"), 
-						rs.getString("email"), rs.getString("password"));
+				Usuario usuario = new Usuario(rs.getLong("u_id"), rs.getString("u_nombre"), 
+						rs.getString("u_email"), rs.getString("u_password"), rs.getString("r_nombre"));
 				
 				usuarios.add(usuario);
 			}
