@@ -50,6 +50,7 @@ public class UsuariosConsolaAplicacion {
 		case 4-> modificarUsuario();
 		case 5-> bajaUsuario();
 		case SALIR-> pl("Gracias por usar esta aplicación");
+		default -> pl("Opción incorrecta!");
 		}
 	}
 
@@ -91,11 +92,11 @@ public class UsuariosConsolaAplicacion {
 		UsuariosCrud.insertar(usuario);
 	}
 
-	private static Object modificarUsuario() {
-		return null;
+	private static void modificarUsuario() {
+		
 	}
 
-	private static Object bajaUsuario() {
-		return null;
+	private static void bajaUsuario() {
+	
 	}
 }
