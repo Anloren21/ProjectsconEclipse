@@ -1,5 +1,5 @@
 package dto;
 
-public record Usuario(Long id, String nombre, String email, String password, String rol) {
+public record Usuario(Long id, String nombre, String email, String password, Long rolId, String rolNombre) {
 
 }

@@ -4,7 +4,9 @@ import static bibliotecas.Consola.*;
 
 import java.util.ArrayList;
 
+import accesodatos.RolCrud;
 import accesodatos.UsuariosCrud;
+import dto.Rol;
 import dto.Usuario;
 
 public class UsuariosConsolaAplicacion {
@@ -44,7 +46,7 @@ public class UsuariosConsolaAplicacion {
 		switch(opcion) {
 		case 1-> listado();
 		case 2-> buscarPorEmail();
-		case 3-> altaUsuario();
+		case 3-> alta();
 		case 4-> modificarUsuario();
 		case 5-> bajaUsuario();
 		case SALIR-> pl("Gracias por usar esta aplicación");
@@ -59,23 +61,41 @@ public class UsuariosConsolaAplicacion {
 		}
 	}
 
-	private static Object buscarPorEmail() {
-		// TODO Auto-generated method stub
-		return null;
+	private static void buscarPorEmail() {
+		String email = pedirString("Email");
+		
+		Usuario usuario = UsuariosCrud.obtenerPorEmail(email);
+		
+		if(usuario != null) {
+			pl(usuario);
+		}else {
+			System.out.println("No se ha encontrado el usuario");
+		}
 	}
 
-	private static Object altaUsuario() {
-		// TODO Auto-generated method stub
-		return null;
+	private static void alta() {
+		String nombre = pedirString("Nombre");
+		String email = pedirString("email");
+		String password = pedirString("password");
+		
+		ArrayList<Rol> roles = RolCrud.obtenerTodos();
+		
+		for (Rol rol:roles) {
+			pf("%2s: %s\n", rol.id(), rol.nombre());
+		}
+		
+		Long rolId = pedirLong(" Elige un id de rol: ");
+		
+		Usuario usuario = new Usuario(null, nombre,  email, password, rolId, null);
+		
+		UsuariosCrud.insertar(usuario);
 	}
 
 	private static Object modificarUsuario() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	private static Object bajaUsuario() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }
